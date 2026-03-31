@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alberto González Sánchez — Transport & Mobility | European Investment Bank</title>
+    <meta name="description" content="Senior Transport Specialist at the European Investment Bank. Writing about transport, mobility, and climate change from an EU perspective. Based in Brussels.">
+    <meta name="keywords" content="Alberto González Sánchez, transport policy, European Investment Bank, EIB, EIB Advisory, sustainable mobility, climate change, EU transport, TEN-T, DG MOVE, climate adaptation, urban mobility, climate proofing, transport financing, Brussels, Spain">
+    <meta name="author" content="Alberto González Sánchez">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://alberto-gonzalez.eu/">
+    <meta property="og:title" content="Alberto González Sánchez — Transport & Mobility">
+    <meta property="og:description" content="Senior Transport Specialist at the European Investment Bank. Writing about transport, mobility, and climate change from an EU perspective.">
+    <link rel="canonical" href="https://alberto-gonzalez.eu/">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Alberto González Sánchez",
+        "url": "https://alberto-gonzalez.eu",
+        "jobTitle": "Senior Transport Specialist",
+        "worksFor": {
+            "@type": "Organization",
+            "name": "European Investment Bank",
+            "url": "https://www.eib.org"
+        },
+        "address": { "@type": "PostalAddress", "addressLocality": "Brussels", "addressCountry": "BE" },
+        "alumniOf": [
+            { "@type": "CollegeOrUniversity", "name": "Universidad Politécnica de Madrid" },
+            { "@type": "CollegeOrUniversity", "name": "Harvard Kennedy School" }
+        ],
+        "sameAs": [
+            "https://www.linkedin.com/in/albertogonzalezsanchez/",
+            "https://albertogonzalezsanchez.substack.com/"
+        ],
+        "knowsAbout": [
+            "Transport Policy", "Transport Financing", "Sustainable Mobility",
+            "Climate Change", "Climate Adaptation", "Climate Proofing",
+            "European Investment Bank", "EIB Advisory", "TEN-T",
+            "EU Transport Policy", "DG MOVE", "Urban Mobility",
+            "Sustainable Urban Mobility Plans", "Transport Asset Management",
+            "Shipping and Ports", "Infrastructure Investment", "Project Preparation"
+        ],
+        "description": "Senior Transport Specialist at the European Investment Bank, working on EIB Advisory in Spain and EU transport policy coordination with DG MOVE."
+    }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav>
+        <div class="nav-inner">
+            <a href="index.html" class="nav-name">Alberto González Sánchez</a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="writing.html">Writing</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-content">
+
+            <div class="hero">
+                <div class="hero-text">
+                    <h1>Alberto González Sánchez</h1>
+                    <p class="tagline">Transport financing: EU policy and advisory</p>
+                    <p class="role">Senior Transport Specialist at the European Investment Bank</p>
+
+                    <p class="bio">I work at the European Investment Bank advising promoters and public entities on developing projects and strategies in the transport sector: from sustainable urban mobility plans to metro projects, to climate adaptation in railways. The main objective: designing bankable projects and investment programmes that can benefit from EU funds and EIB financing. I also coordinate the EIB engagement with the EU Institutions on transport policy, including the recently adopted Ports and Industrial Maritime Strategies.</p>
+
+                    <p class="bio">I write a newsletter on Substack, <a href="https://albertogonzalezsanchez.substack.com/" target="_blank" rel="noopener"><em>The mobility climate</em></a>, about the topics I work on.</p>
+
+                    <p class="bio">Before joining the EIB, I managed Connecting Europe Facility (CEF) grants at CINEA and spent nearly a decade as a consultant on sustainable transport across Spain, Peru, Mexico, Chile and Guatemala.</p>
+
+                    <p class="bio">I am a Civil Engineer from the Universidad Politécnica de Madrid, started a PhD (never finished it), and have an executive certificate in sustainable urban mobility planning. I also had the honour of attending an executive course on climate change at Harvard Kennedy School.</p>
+
+                    <div class="subscribe-embed">
+                        <iframe src="https://albertogonzalezsanchez.substack.com/embed" width="100%" height="150" style="border:1px solid #EEE; background:white; border-radius:8px; max-width:480px;" frameborder="0" scrolling="no"></iframe>
+                    </div>
+                </div>
+                <div class="hero-photo">
+                    <div class="photo-frame">
+                        <img src="picture_linkedin.jpg" alt="Alberto González Sánchez">
+                    </div>
+                </div>
+            </div>
+
+            <div class="recent-section">
+                <h2>Recent publications</h2>
+                <ul id="recent-posts" class="recent-list">
+                    <li class="loading">Loading latest posts…</li>
+                </ul>
+            </div>
+
+        </div>
+
+        <footer>
+            All views expressed on this site and in my newsletter are personal and do not represent the positions of the European Investment Bank.
+            <br>© 2026 Alberto González Sánchez
+        </footer>
+    </div>
+
+    <script>
+        const SUBSTACK_FEED = 'https://albertogonzalezsanchez.substack.com/feed';
+        const RSS2JSON_API = 'https://api.rss2json.com/v1/api.json';
+
+        function formatDate(dateStr) {
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+        }
+
+        function stripHtml(html) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            return tmp.textContent || tmp.innerText || '';
+        }
+
+        async function loadPosts() {
+            const container = document.getElementById('recent-posts');
+            try {
+                const response = await fetch(`${RSS2JSON_API}?rss_url=${encodeURIComponent(SUBSTACK_FEED)}&count=5`);
+                const data = await response.json();
+                if (data.status !== 'ok' || !data.items || data.items.length === 0) throw new Error('Feed unavailable');
+
+                container.innerHTML = '';
+                data.items.slice(0, 5).forEach(item => {
+                    const excerpt = stripHtml(item.description).substring(0, 150).trim();
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <a href="${item.link}" target="_blank" rel="noopener">
+                            <span class="post-title">${item.title} <span style="font-weight:400;color:#888;">(${formatDate(item.pubDate)})</span></span>
+                            ${excerpt ? `<span class="post-excerpt">${excerpt}…</span>` : ''}
+                        </a>
+                    `;
+                    container.appendChild(li);
+                });
+            } catch (err) {
+                container.innerHTML = '';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadPosts);
+    </script>
+
+</body>
+</html>
