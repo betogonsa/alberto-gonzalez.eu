@@ -125,7 +125,7 @@
         async function loadPosts() {
             const container = document.getElementById('recent-posts');
             try {
-                const response = await fetch(`${RSS2JSON_API}?rss_url=${encodeURIComponent(SUBSTACK_FEED)}&count=5`);
+                const response = await fetch(`${RSS2JSON_API}?rss_url=${encodeURIComponent(SUBSTACK_FEED)}`);
                 const data = await response.json();
                 if (data.status !== 'ok' || !data.items || data.items.length === 0) throw new Error('Feed unavailable');
 
