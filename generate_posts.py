@@ -388,28 +388,90 @@ def main():
     
     print(f"\nDone! Generated {generated} article pages in '{POSTS_DIR}/' directory.")
     
-    # Generate a simple index of posts for the writing page to potentially use
-    posts_index = []
+    # Build post data for static injection
+    posts_data = []
     for entry in feed.entries:
         title = entry.get('title', 'Untitled')
         slug = slugify(title)
         pub_date = entry.get('published_parsed')
         date_str = ''
+        date_long = ''
         if pub_date:
+            date_obj2 = datetime(pub_date.tm_year, pub_date.tm_mon, pub_date.tm_mday)
             date_str = f"{pub_date.tm_year}-{pub_date.tm_mon:02d}-{pub_date.tm_mday:02d}"
-        posts_index.append({
+            date_long = date_obj2.strftime('%B %Y')
+        
+        desc = ''
+        if 'summary' in entry:
+            desc = extract_description(entry.summary, max_length=150)
+        
+        posts_data.append({
             'title': title,
             'slug': slug,
             'date': date_str,
+            'date_long': date_long,
+            'excerpt': desc,
             'url': f"posts/{slug}.html"
         })
     
-    # Write posts index as a simple JS file
-    import json
+    # Generate posts_index.js (keep as backup for JS)
+    posts_index = [{'title': p['title'], 'slug': p['slug'], 'date': p['date'], 'url': p['url']} for p in posts_data]
     with open('posts_index.js', 'w', encoding='utf-8') as f:
         f.write(f"const POSTS_INDEX = {json.dumps(posts_index, ensure_ascii=False, indent=2)};")
-    
     print("Generated posts_index.js")
+    
+    # ---- INJECT STATIC HTML INTO INDEX.HTML (Recent publications) ----
+    recent_html_items = []
+    for post in posts_data[:5]:
+        date_part = f' <span style="font-weight:400;color:#888;">({post["date_long"]})</span>' if post['date_long'] else ''
+        excerpt_part = f'\n                        <span class="post-excerpt">{post["excerpt"]}…</span>' if post['excerpt'] else ''
+        recent_html_items.append(f'''                    <li>
+                        <a href="{post['url']}">
+                            <span class="post-title">{post['title']}{date_part}</span>{excerpt_part}
+                        </a>
+                    </li>''')
+    
+    recent_html = '\n'.join(recent_html_items)
+    
+    if os.path.exists('index.html'):
+        with open('index.html', 'r', encoding='utf-8') as f:
+            index_content = f.read()
+        
+        # Replace the placeholder list with static content
+        import re as re2
+        # Match the ul with id="recent-posts" and replace its contents
+        pattern = r'(<ul id="recent-posts" class="recent-list">).*?(</ul>)'
+        replacement = f'\\1\n{recent_html}\n                \\2'
+        new_index = re2.sub(pattern, replacement, index_content, flags=re.DOTALL)
+        
+        with open('index.html', 'w', encoding='utf-8') as f:
+            f.write(new_index)
+        print("Injected static recent publications into index.html")
+    
+    # ---- INJECT STATIC HTML INTO WRITING.HTML (All posts) ----
+    writing_html_items = []
+    for post in posts_data:
+        date_part = f' <span style="font-weight:400;color:#888;">({post["date_long"]})</span>' if post['date_long'] else ''
+        excerpt_part = f'\n                        <span class="post-excerpt">{post["excerpt"]}…</span>' if post['excerpt'] else ''
+        writing_html_items.append(f'''                    <li>
+                        <a href="{post['url']}">
+                            <span class="post-title">{post['title']}{date_part}</span>{excerpt_part}
+                        </a>
+                    </li>''')
+    
+    writing_html = '\n'.join(writing_html_items)
+    
+    if os.path.exists('writing.html'):
+        with open('writing.html', 'r', encoding='utf-8') as f:
+            writing_content = f.read()
+        
+        pattern = r'(<ul id="all-posts" class="recent-list">).*?(</ul>)'
+        replacement = f'\\1\n{writing_html}\n            \\2'
+        new_writing = re2.sub(pattern, replacement, writing_content, flags=re.DOTALL)
+        
+        with open('writing.html', 'w', encoding='utf-8') as f:
+            f.write(new_writing)
+        print("Injected static post archive into writing.html")
 
 
 if __name__ == '__main__':
