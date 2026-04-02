@@ -310,6 +310,33 @@ def main():
                     f.write(f"const POSTS_INDEX = {json.dumps(posts_index, ensure_ascii=False, indent=2)};")
                 
                 print(f"\nDone! Generated {generated} article pages via rss2json fallback.")
+                
+                # Build posts_data for static injection
+                posts_data = []
+                for item in data['items']:
+                    title = item.get('title', 'Untitled')
+                    slug = slugify(title)
+                    pub_date = item.get('pubDate', '')
+                    date_long = ''
+                    date_iso = ''
+                    if pub_date:
+                        try:
+                            d = datetime.strptime(pub_date[:10], '%Y-%m-%d')
+                            date_long = d.strftime('%B %Y')
+                            date_iso = pub_date[:10]
+                        except:
+                            pass
+                    excerpt = extract_description(item.get('description', ''), max_length=150)
+                    posts_data.append({
+                        'title': title,
+                        'slug': slug,
+                        'date': date_iso,
+                        'date_long': date_long,
+                        'excerpt': excerpt,
+                        'url': f"posts/{slug}.html"
+                    })
+                
+                inject_static_html(posts_data)
                 return
             else:
                 print("rss2json fallback also failed.")
@@ -420,11 +447,17 @@ def main():
         f.write(f"const POSTS_INDEX = {json.dumps(posts_index, ensure_ascii=False, indent=2)};")
     print("Generated posts_index.js")
     
+    inject_static_html(posts_data)
+
+
+def inject_static_html(posts_data):
+    """Inject static post listings into index.html and writing.html."""
+    
     # ---- INJECT STATIC HTML INTO INDEX.HTML (Recent publications) ----
     recent_html_items = []
     for post in posts_data[:5]:
-        date_part = f' <span style="font-weight:400;color:#888;">({post["date_long"]})</span>' if post['date_long'] else ''
-        excerpt_part = f'\n                        <span class="post-excerpt">{post["excerpt"]}…</span>' if post['excerpt'] else ''
+        date_part = f' <span style="font-weight:400;color:#888;">({post["date_long"]})</span>' if post.get('date_long') else ''
+        excerpt_part = f'\n                        <span class="post-excerpt">{post["excerpt"]}…</span>' if post.get('excerpt') else ''
         recent_html_items.append(f'''                    <li>
                         <a href="{post['url']}">
                             <span class="post-title">{post['title']}{date_part}</span>{excerpt_part}
@@ -437,12 +470,9 @@ def main():
         with open('index.html', 'r', encoding='utf-8') as f:
             index_content = f.read()
         
-        # Replace the placeholder list with static content
-        import re as re2
-        # Match the ul with id="recent-posts" and replace its contents
         pattern = r'(<ul id="recent-posts" class="recent-list">).*?(</ul>)'
         replacement = f'\\1\n{recent_html}\n                \\2'
-        new_index = re2.sub(pattern, replacement, index_content, flags=re.DOTALL)
+        new_index = re.sub(pattern, replacement, index_content, flags=re.DOTALL)
         
         with open('index.html', 'w', encoding='utf-8') as f:
             f.write(new_index)
@@ -451,8 +481,8 @@ def main():
     # ---- INJECT STATIC HTML INTO WRITING.HTML (All posts) ----
     writing_html_items = []
     for post in posts_data:
-        date_part = f' <span style="font-weight:400;color:#888;">({post["date_long"]})</span>' if post['date_long'] else ''
-        excerpt_part = f'\n                        <span class="post-excerpt">{post["excerpt"]}…</span>' if post['excerpt'] else ''
+        date_part = f' <span style="font-weight:400;color:#888;">({post["date_long"]})</span>' if post.get('date_long') else ''
+        excerpt_part = f'\n                        <span class="post-excerpt">{post["excerpt"]}…</span>' if post.get('excerpt') else ''
         writing_html_items.append(f'''                    <li>
                         <a href="{post['url']}">
                             <span class="post-title">{post['title']}{date_part}</span>{excerpt_part}
@@ -467,7 +497,7 @@ def main():
         
         pattern = r'(<ul id="all-posts" class="recent-list">).*?(</ul>)'
         replacement = f'\\1\n{writing_html}\n            \\2'
-        new_writing = re2.sub(pattern, replacement, writing_content, flags=re.DOTALL)
+        new_writing = re.sub(pattern, replacement, writing_content, flags=re.DOTALL)
         
         with open('writing.html', 'w', encoding='utf-8') as f:
             f.write(new_writing)
