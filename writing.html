@@ -117,7 +117,7 @@
                     const excerpt = stripHtml(item.description).substring(0, 150).trim();
                     const li = document.createElement('li');
                     li.innerHTML = `
-                        <a href="${item.link}" target="_blank" rel="noopener">
+                        <a href="${localUrl}">
                             <span class="post-title">${item.title} <span style="font-weight:400;color:#888;">(${formatDate(item.pubDate)})</span></span>
                             ${excerpt ? `<span class="post-excerpt">${excerpt}…</span>` : ''}
                         </a>
