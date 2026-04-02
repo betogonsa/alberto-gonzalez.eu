@@ -7,7 +7,10 @@ Run manually or via GitHub Actions (see .github/workflows/generate-posts.yml).
 import feedparser
 import os
 import re
+import json
 import urllib.request
+import urllib.parse
+import urllib.error
 from datetime import datetime
 
 FEED_URL = "https://albertogonzalezsanchez.substack.com/feed"
@@ -211,24 +214,114 @@ def extract_keywords(title):
 def main():
     print(f"Fetching RSS feed from {FEED_URL}...")
     
-    # Fetch with a browser-like user agent (Substack blocks default Python agents)
-    req = urllib.request.Request(
-        FEED_URL,
-        headers={'User-Agent': 'Mozilla/5.0 (compatible; AlbertoGonzalezSite/1.0)'}
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=30) as response:
-            feed_content = response.read()
-        print(f"Fetched {len(feed_content)} bytes from RSS feed.")
-    except Exception as e:
-        print(f"Error fetching feed: {e}")
-        return
+    # Substack blocks many automated requests. Use a full browser user agent.
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Connection': 'keep-alive',
+    }
+    req = urllib.request.Request(FEED_URL, headers=headers)
+    
+    feed_content = None
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=30) as response:
+                feed_content = response.read()
+            print(f"Fetched {len(feed_content)} bytes from RSS feed.")
+            break
+        except urllib.error.HTTPError as e:
+            print(f"Attempt {attempt + 1}: HTTP Error {e.code}: {e.reason}")
+            if attempt < 2:
+                import time
+                time.sleep(5)
+        except Exception as e:
+            print(f"Attempt {attempt + 1}: Error: {e}")
+            if attempt < 2:
+                import time
+                time.sleep(5)
+    
+    if not feed_content:
+        print("Could not fetch feed after 3 attempts. Trying rss2json fallback...")
+        try:
+            fallback_url = f"https://api.rss2json.com/v1/api.json?rss_url={urllib.parse.quote(FEED_URL, safe='')}"
+            req2 = urllib.request.Request(fallback_url, headers=headers)
+            with urllib.request.urlopen(req2, timeout=30) as response:
+                import json
+                data = json.loads(response.read())
+            
+            if data.get('status') == 'ok' and data.get('items'):
+                print(f"Fallback succeeded. Got {len(data['items'])} items from rss2json.")
+                # Convert rss2json format to generate pages
+                os.makedirs(POSTS_DIR, exist_ok=True)
+                generated = 0
+                posts_index = []
+                
+                for item in data['items']:
+                    title = item.get('title', 'Untitled')
+                    slug = slugify(title)
+                    filepath = os.path.join(POSTS_DIR, f"{slug}.html")
+                    
+                    content = clean_content(item.get('content', item.get('description', '')))
+                    description = extract_description(item.get('description', ''), max_length=160)
+                    keywords = extract_keywords(title)
+                    substack_url = item.get('link', 'https://albertogonzalezsanchez.substack.com/')
+                    
+                    pub_date = item.get('pubDate', '')
+                    if pub_date:
+                        try:
+                            date_obj = datetime.strptime(pub_date[:10], '%Y-%m-%d')
+                            date_str = date_obj.strftime('%B %d, %Y')
+                        except:
+                            date_obj = datetime.now()
+                            date_str = ''
+                    else:
+                        date_obj = datetime.now()
+                        date_str = ''
+                    
+                    page_html = TEMPLATE.format(
+                        title=title.replace('{', '{{').replace('}', '}}'),
+                        description=description.replace('"', '&quot;'),
+                        slug=slug,
+                        keywords=keywords,
+                        date=date_str,
+                        year=date_obj.year,
+                        substack_url=substack_url,
+                        content=content
+                    )
+                    
+                    with open(filepath, 'w', encoding='utf-8') as f:
+                        f.write(page_html)
+                    
+                    print(f"  Generated: {filepath}")
+                    generated += 1
+                    
+                    date_iso = ''
+                    if pub_date:
+                        date_iso = pub_date[:10]
+                    posts_index.append({
+                        'title': title,
+                        'slug': slug,
+                        'date': date_iso,
+                        'url': f"posts/{slug}.html"
+                    })
+                
+                with open('posts_index.js', 'w', encoding='utf-8') as f:
+                    f.write(f"const POSTS_INDEX = {json.dumps(posts_index, ensure_ascii=False, indent=2)};")
+                
+                print(f"\nDone! Generated {generated} article pages via rss2json fallback.")
+                return
+            else:
+                print("rss2json fallback also failed.")
+                return
+        except Exception as e:
+            print(f"rss2json fallback error: {e}")
+            return
     
     feed = feedparser.parse(feed_content)
     
     if not feed.entries:
-        print("No entries found in feed.")
-        print(f"Feed status: {getattr(feed, 'status', 'N/A')}")
+        print("No entries found in parsed feed.")
         print(f"Feed bozo: {feed.bozo}")
         if feed.bozo_exception:
             print(f"Feed error: {feed.bozo_exception}")
