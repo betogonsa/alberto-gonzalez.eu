@@ -7,6 +7,7 @@ Run manually or via GitHub Actions (see .github/workflows/generate-posts.yml).
 import feedparser
 import os
 import re
+import urllib.request
 from datetime import datetime
 
 FEED_URL = "https://albertogonzalezsanchez.substack.com/feed"
@@ -209,10 +210,28 @@ def extract_keywords(title):
 
 def main():
     print(f"Fetching RSS feed from {FEED_URL}...")
-    feed = feedparser.parse(FEED_URL)
+    
+    # Fetch with a browser-like user agent (Substack blocks default Python agents)
+    req = urllib.request.Request(
+        FEED_URL,
+        headers={'User-Agent': 'Mozilla/5.0 (compatible; AlbertoGonzalezSite/1.0)'}
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as response:
+            feed_content = response.read()
+        print(f"Fetched {len(feed_content)} bytes from RSS feed.")
+    except Exception as e:
+        print(f"Error fetching feed: {e}")
+        return
+    
+    feed = feedparser.parse(feed_content)
     
     if not feed.entries:
         print("No entries found in feed.")
+        print(f"Feed status: {getattr(feed, 'status', 'N/A')}")
+        print(f"Feed bozo: {feed.bozo}")
+        if feed.bozo_exception:
+            print(f"Feed error: {feed.bozo_exception}")
         return
     
     print(f"Found {len(feed.entries)} articles.")
