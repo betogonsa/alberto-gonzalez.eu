@@ -1,5 +1,11 @@
 const POSTS_INDEX = [
   {
+    "title": "Ports electrification and the quest for European energy autonomy",
+    "slug": "ports-electrification-and-the-quest-for-european-energy-autonomy",
+    "date": "2026-04-08",
+    "url": "posts/ports-electrification-and-the-quest-for-european-energy-autonomy.html"
+  },
+  {
     "title": "THREE LENSES TO READ THE NEW EUROPEAN STRATEGIES ON SHIPPING, SHIPBUILDING AND PORTS (AND A SHORT EIB COMMERCIAL)",
     "slug": "three-lenses-to-read-the-new-european-strategies-on-shipping-shipbuilding-and-po",
     "date": "2026-03-24",
@@ -52,11 +58,5 @@ const POSTS_INDEX = [
     "slug": "mainstreaming-climate-resilience",
     "date": "2025-06-30",
     "url": "posts/mainstreaming-climate-resilience.html"
-  },
-  {
-    "title": "TEN-T Nodes meeting in Bilbao",
-    "slug": "ten-t-nodes-meeting-in-bilbao",
-    "date": "2025-06-03",
-    "url": "posts/ten-t-nodes-meeting-in-bilbao.html"
   }
 ];
