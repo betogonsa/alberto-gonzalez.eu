@@ -502,6 +502,53 @@ def inject_static_html(posts_data):
         with open('writing.html', 'w', encoding='utf-8') as f:
             f.write(new_writing)
         print("Injected static post archive into writing.html")
+    
+    # Generate sitemap
+    generate_sitemap(posts_data)
+
+
+def generate_sitemap(posts_data):
+    """Generate sitemap.xml for Google and Bing."""
+    
+    today = datetime.now().strftime('%Y-%m-%d')
+    
+    urls = [
+        {'loc': 'https://alberto-gonzalez.eu/', 'priority': '1.0', 'changefreq': 'weekly', 'lastmod': today},
+        {'loc': 'https://alberto-gonzalez.eu/writing.html', 'priority': '0.8', 'changefreq': 'weekly', 'lastmod': today},
+        {'loc': 'https://alberto-gonzalez.eu/contact.html', 'priority': '0.5', 'changefreq': 'monthly', 'lastmod': today},
+    ]
+    
+    for post in posts_data:
+        lastmod = post.get('date', today) if post.get('date') else today
+        urls.append({
+            'loc': f"https://alberto-gonzalez.eu/{post['url']}",
+            'priority': '0.7',
+            'changefreq': 'monthly',
+            'lastmod': lastmod,
+        })
+    
+    xml_lines = ['<?xml version="1.0" encoding="UTF-8"?>']
+    xml_lines.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
+    
+    for url in urls:
+        xml_lines.append('  <url>')
+        xml_lines.append(f'    <loc>{url["loc"]}</loc>')
+        xml_lines.append(f'    <lastmod>{url["lastmod"]}</lastmod>')
+        xml_lines.append(f'    <changefreq>{url["changefreq"]}</changefreq>')
+        xml_lines.append(f'    <priority>{url["priority"]}</priority>')
+        xml_lines.append('  </url>')
+    
+    xml_lines.append('</urlset>')
+    
+    with open('sitemap.xml', 'w', encoding='utf-8') as f:
+        f.write('\n'.join(xml_lines))
+    
+    # Also generate robots.txt pointing to the sitemap
+    with open('robots.txt', 'w', encoding='utf-8') as f:
+        f.write('User-agent: *\nAllow: /\n\nSitemap: https://alberto-gonzalez.eu/sitemap.xml\n')
+    
+    print(f"Generated sitemap.xml with {len(urls)} URLs")
+    print("Generated robots.txt")
 
 
 if __name__ == '__main__':
