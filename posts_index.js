@@ -58,5 +58,17 @@ const POSTS_INDEX = [
     "slug": "mainstreaming-climate-resilience",
     "date": "2025-06-30",
     "url": "posts/mainstreaming-climate-resilience.html"
+  },
+  {
+    "title": "TEN-T Nodes meeting in Bilbao",
+    "slug": "ten-t-nodes-meeting-in-bilbao",
+    "date": "2025-06-03",
+    "url": "posts/ten-t-nodes-meeting-in-bilbao.html"
+  },
+  {
+    "title": "A (not-too-long) disclaimer",
+    "slug": "a-not-too-long-disclaimer",
+    "date": "2025-06-03",
+    "url": "posts/a-not-too-long-disclaimer.html"
   }
 ];
