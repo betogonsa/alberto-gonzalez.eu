@@ -128,6 +128,109 @@ nav {
     margin-bottom: 20px;
 }
 
+/* POST CARDS */
+.post-cards {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+.post-card a {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 20px;
+    text-decoration: none;
+    padding: 16px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
+}
+
+.post-card a:hover {
+    text-decoration: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+    border-color: #ccc;
+    transform: translateY(-2px);
+}
+
+.post-card-image {
+    width: 160px;
+    height: 110px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--accent-soft);
+    flex-shrink: 0;
+}
+
+.post-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.post-card-image .no-image {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Lora', serif;
+    font-size: 2rem;
+    color: var(--accent);
+    opacity: 0.3;
+}
+
+.post-card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+}
+
+.post-card-body .post-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.35;
+    transition: color 0.2s;
+    margin-bottom: 4px;
+}
+
+.post-card a:hover .post-title {
+    color: var(--accent);
+}
+
+.post-card-body .post-date {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.78rem;
+    color: var(--text-light);
+    margin-bottom: 6px;
+}
+
+.post-card-body .post-excerpt {
+    font-size: 0.84rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+@media (max-width: 700px) {
+    .post-card a {
+        grid-template-columns: 100px 1fr;
+        gap: 14px;
+        padding: 12px;
+    }
+    .post-card-image { width: 100px; height: 80px; }
+    .post-card-body .post-title { font-size: 0.88rem; }
+    .post-card-body .post-excerpt { -webkit-line-clamp: 2; font-size: 0.8rem; }
+}
+
+/* Fallback list style for non-card pages */
 .recent-list {
     list-style: none;
     display: flex;
