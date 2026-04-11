@@ -134,6 +134,20 @@ def extract_keywords(title):
     return ', '.join([w for w in words if w not in stop_words and len(w) > 2][:8])
 
 
+def extract_thumbnail(html_content):
+    """Extract the first image URL from HTML content."""
+    if not html_content:
+        return ''
+    match = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', html_content)
+    if match:
+        url = match.group(1)
+        # Skip tiny tracking pixels and icons
+        if 'width=1' in url or 'height=1' in url or 'favicon' in url.lower():
+            return ''
+        return url
+    return ''
+
+
 def load_registry():
     if os.path.exists(REGISTRY_FILE):
         with open(REGISTRY_FILE, 'r', encoding='utf-8') as f:
@@ -244,46 +258,56 @@ def generate_article_page(item, slug):
     return filepath
 
 
-def inject_static_html(posts_data):
-    # Index.html - recent 5
-    recent_items = []
-    for post in posts_data[:5]:
-        date_part = f' <span style="font-weight:400;color:#888;">({post["date_long"]})</span>' if post.get('date_long') else ''
-        excerpt_part = f'\n                        <span class="post-excerpt">{post["excerpt"]}…</span>' if post.get('excerpt') else ''
-        recent_items.append(f'''                    <li>
+def build_card_html(post):
+    """Build a single post card HTML."""
+    thumbnail = post.get('thumbnail', '')
+    if thumbnail:
+        img_html = f'<img src="{thumbnail}" alt="{post["title"]}" loading="lazy">'
+    else:
+        img_html = '<div class="no-image">✦</div>'
+    
+    date_html = f'<span class="post-date">{post["date_long"]}</span>' if post.get('date_long') else ''
+    excerpt_html = f'<span class="post-excerpt">{post["excerpt"]}</span>' if post.get('excerpt') else ''
+    
+    return f'''                    <li class="post-card">
                         <a href="{post['url']}">
-                            <span class="post-title">{post['title']}{date_part}</span>{excerpt_part}
+                            <div class="post-card-image">{img_html}</div>
+                            <div class="post-card-body">
+                                <span class="post-title">{post['title']}</span>
+                                {date_html}
+                                {excerpt_html}
+                            </div>
                         </a>
-                    </li>''')
+                    </li>'''
+
+
+def inject_static_html(posts_data):
+    # Index.html - recent 5 as cards
+    recent_cards = [build_card_html(post) for post in posts_data[:5]]
     if os.path.exists('index.html'):
         with open('index.html', 'r', encoding='utf-8') as f:
             content = f.read()
-        pattern = r'(<ul id="recent-posts" class="recent-list">).*?(</ul>)'
-        replacement = f'\\1\n' + '\n'.join(recent_items) + '\n                \\2'
+        # Update the ul class to post-cards and inject cards
+        pattern = r'(<ul id="recent-posts" class=")[^"]*(">[^<]*(?:<[^/].*?)*?)(</ul>)'
+        # Simpler: just replace everything between the ul tags
+        pattern = r'(<ul id="recent-posts" class=")(?:recent-list|post-cards)(">\s*).*?(\s*</ul>)'
+        replacement = f'\\1post-cards\\2\n' + '\n'.join(recent_cards) + '\n                \\3'
         content = re.sub(pattern, replacement, content, flags=re.DOTALL)
         with open('index.html', 'w', encoding='utf-8') as f:
             f.write(content)
-        print("Injected recent publications into index.html")
+        print("Injected recent publications cards into index.html")
 
-    # Writing.html - all posts
-    all_items = []
-    for post in posts_data:
-        date_part = f' <span style="font-weight:400;color:#888;">({post["date_long"]})</span>' if post.get('date_long') else ''
-        excerpt_part = f'\n                        <span class="post-excerpt">{post["excerpt"]}…</span>' if post.get('excerpt') else ''
-        all_items.append(f'''                    <li>
-                        <a href="{post['url']}">
-                            <span class="post-title">{post['title']}{date_part}</span>{excerpt_part}
-                        </a>
-                    </li>''')
+    # Writing.html - all posts as cards
+    all_cards = [build_card_html(post) for post in posts_data]
     if os.path.exists('writing.html'):
         with open('writing.html', 'r', encoding='utf-8') as f:
             content = f.read()
-        pattern = r'(<ul id="all-posts" class="recent-list">).*?(</ul>)'
-        replacement = f'\\1\n' + '\n'.join(all_items) + '\n            \\2'
+        pattern = r'(<ul id="all-posts" class=")(?:recent-list|post-cards)(">\s*).*?(\s*</ul>)'
+        replacement = f'\\1post-cards\\2\n' + '\n'.join(all_cards) + '\n            \\3'
         content = re.sub(pattern, replacement, content, flags=re.DOTALL)
         with open('writing.html', 'w', encoding='utf-8') as f:
             f.write(content)
-        print("Injected all posts into writing.html")
+        print("Injected all post cards into writing.html")
 
 
 def generate_sitemap(posts_data):
@@ -337,6 +361,7 @@ def main():
                     'date': item.get('date_iso', ''), 'date_long': item.get('date_long', ''),
                     'excerpt': extract_description(item.get('description', ''), max_length=150),
                     'url': f"posts/{slug}.html", 'substack_url': item.get('link', ''),
+                    'thumbnail': extract_thumbnail(item.get('content', '')),
                 })
                 new_count += 1
             else:
