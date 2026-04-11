@@ -369,16 +369,33 @@ def main():
                 print(f"  Updated: {filepath}")
         print(f"\n{new_count} new, {len(registry)} total.")
 
-    # 3. Sort by date (newest first)
+    # 3. Backfill thumbnails for registry entries that don't have one
+    for entry in registry:
+        if not entry.get('thumbnail'):
+            # Try to extract from the existing HTML file
+            filepath = os.path.join(POSTS_DIR, f"{entry['slug']}.html")
+            if os.path.exists(filepath):
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    html = f.read()
+                # Look for first img in article-body
+                body_match = re.search(r'<div class="article-body">(.*?)</div>\s*<div class="article-footer">', html, re.DOTALL)
+                if body_match:
+                    thumb = extract_thumbnail(body_match.group(1))
+                    if thumb:
+                        entry['thumbnail'] = thumb
+                        print(f"  Backfilled thumbnail for: {entry['slug']}")
+
+    # 4. Sort by date (newest first)
     registry.sort(key=lambda p: p.get('date', ''), reverse=True)
 
-    # 4. Save registry
+    # 5. Save registry
     save_registry(registry)
 
-    # 5. Build posts_data from registry
+    # 6. Build posts_data from registry (including thumbnail)
     posts_data = [{
         'title': p['title'], 'slug': p['slug'], 'date': p.get('date', ''),
         'date_long': p.get('date_long', ''), 'excerpt': p.get('excerpt', ''), 'url': p['url'],
+        'thumbnail': p.get('thumbnail', ''),
     } for p in registry]
 
     # 6. Generate index files
