@@ -1,5 +1,11 @@
 const POSTS_INDEX = [
   {
+    "title": "Andalucía: Probably the EU's largest single SUMP planner",
+    "slug": "andalucía-probably-the-eus-largest-single-sump-planner",
+    "date": "2026-05-11",
+    "url": "posts/andalucía-probably-the-eus-largest-single-sump-planner.html"
+  },
+  {
     "title": "Ports electrification and the quest for European energy autonomy",
     "slug": "ports-electrification-and-the-quest-for-european-energy-autonomy",
     "date": "2026-04-08",
